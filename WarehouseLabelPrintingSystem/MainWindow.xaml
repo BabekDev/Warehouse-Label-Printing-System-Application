@@ -1,12 +1,55 @@
-﻿<Window x:Class="WarehouseLabelPrintingSystem.MainWindow"
+﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WarehouseLabelPrintingSystem"
+        xmlns:Model="clr-namespace:WarehouseLabelPrintingSystem.Model" x:Class="WarehouseLabelPrintingSystem.MainWindow"
+        Icon="/logo.png"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Warehouse Label Printing System" Height="450" Width="800" Background="#FF424242">
+    <Window.Resources>
+        <!-- Определение стиля кнопки -->
+        <Style x:Key="CustomButtonStyle" TargetType="{x:Type Button}">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#808080"/>
+                    <Setter Property="Foreground" Value="#FF444444"/>
+                </Trigger>
+            </Style.Triggers>
+            
+            <Setter Property="Background" Value="#FF66D294"/>
+            <Setter Property="Foreground" Value="#FF353535"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10"/>
 
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border CornerRadius="2"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FF353535"/>
+                                <Setter Property="Foreground" Value="#FF66D294"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid Cursor="Arrow">
+        <TextBlock x:Name="isConnection_text" TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Top" Foreground="#FF70FF72" HorizontalAlignment="Right" Width="176" Margin="0,9,6,0"/>
+        <Button x:Name="Print_Menu" Style="{StaticResource CustomButtonStyle}" Content="Print Menu" HorizontalAlignment="Left" Margin="3,3,0,0" VerticalAlignment="Top" Width="83" Height="28" FontFamily="Arial" ForceCursor="True" FontSize="14" Cursor="Hand" RenderTransformOrigin="1,0" Click="Print_Menu_Click" IsEnabled="False"/>
+        <Button x:Name="Export_to_PDF" Style="{StaticResource CustomButtonStyle}" Content="Export to PDF" HorizontalAlignment="Left" Margin="91,3,0,0" VerticalAlignment="Top" Width="100" Height="28" FontFamily="Arial" ForceCursor="True" FontSize="14" Cursor="Hand" RenderTransformOrigin="1,0" BorderBrush="DimGray" Click="Export_to_PDF_Click" IsEnabled="False"/>
+        <ListView x:Name="ListView_Products" SelectionMode="Single" Margin="-1,34,-1,-1" SelectionChanged="ListView_Products_SelectionChanged" MouseDown="ListView_Products_MouseDown" Background="White" BorderBrush="#FF080808" FontSize="14">
+            <ListView.View>
+                <GridView x:Name="GridView_Products" />
+            </ListView.View>
+        </ListView>
     </Grid>
 </Window>
