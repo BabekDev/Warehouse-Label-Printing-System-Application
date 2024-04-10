@@ -1,12 +1,17 @@
 ﻿using Microsoft.Win32;
 using System.Drawing;
+using System.IO;
+using System.Printing;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Xps.Packaging;
+using System.Windows.Xps;
 using WarehouseLabelPrintingSystem.Model;
 using WarehouseLabelPrintingSystem.Utilities;
 using WarehouseLabelPrintingSystem.ViewModel;
+using PdfSharp.Pdf.IO;
 
 namespace WarehouseLabelPrintingSystem.View
 {
@@ -50,16 +55,26 @@ namespace WarehouseLabelPrintingSystem.View
         {
             CustomField customField = (CustomField)ListView_CustomFields.SelectedItem;
 
-            if(customField != null )
+            if (customField != null)
             {
                 SaveFileDialog saveFileDialog = new SaveFileDialog();
                 saveFileDialog.Filter = "PDF Files (*.pdf)|*.pdf";
 
-                if(saveFileDialog.ShowDialog() == true)
+                if (saveFileDialog.ShowDialog() == true)
                 {
                     string filePath = saveFileDialog.FileName;
                     BarcodeGenerationAndSavingToPDF(filePath);
                 }
+            }
+        }
+
+        private void Print_Button_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                PrintPDF(openFileDialog.FileName);
             }
         }
 
@@ -68,6 +83,7 @@ namespace WarehouseLabelPrintingSystem.View
             if (ListView_CustomFields.SelectedItem != null)
             {
                 Save_to_File.IsEnabled = true;
+                Print_Button.IsEnabled = true;
             }
         }
 
@@ -125,6 +141,43 @@ namespace WarehouseLabelPrintingSystem.View
             };
 
             label.GenerateLabel(filePath, _product.barcode!);
+        }
+
+        private void PrintPDF(string filePath)
+        {
+            try
+            {
+                PrintDialog printDialog = new();
+                printDialog.PageRangeSelection = PageRangeSelection.AllPages;
+                printDialog.UserPageRangeEnabled = true;
+
+                if (printDialog.ShowDialog() == true)
+                {
+                    System.Diagnostics.ProcessStartInfo info = new System.Diagnostics.ProcessStartInfo
+                    {
+                        Verb = "print",
+                        FileName = filePath,
+                        CreateNoWindow = true,
+                        WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
+                    };
+
+                    System.Diagnostics.Process p = new()
+                    {
+                        StartInfo = info
+                    };
+                    p.Start();
+
+                    p.WaitForInputIdle();
+
+                    Thread.Sleep(3000);
+                    if (false == p.CloseMainWindow())
+                        p.Kill();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("An error occurred while printing the PDF file: " + ex.Message);
+            }
         }
     }
 }

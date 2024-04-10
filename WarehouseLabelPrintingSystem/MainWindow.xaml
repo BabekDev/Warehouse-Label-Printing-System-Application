@@ -5,9 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WarehouseLabelPrintingSystem"
         xmlns:Model="clr-namespace:WarehouseLabelPrintingSystem.Model" x:Class="WarehouseLabelPrintingSystem.MainWindow"
-        Icon="/logo.png"
         mc:Ignorable="d"
-        Title="Warehouse Label Printing System" Height="450" Width="800" Background="#FF424242">
+        Title="Warehouse Label Printing System" Height="450" Width="800" Background="#FF424242" Icon="/logo.png">
     <Window.Resources>
         <!-- Определение стиля кнопки -->
         <Style x:Key="CustomButtonStyle" TargetType="{x:Type Button}">
