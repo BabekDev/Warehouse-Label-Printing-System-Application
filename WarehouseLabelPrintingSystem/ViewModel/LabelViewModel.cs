@@ -5,6 +5,7 @@ using System.IO;
 using ZXing.Common;
 using ZXing;
 using ZXing.Windows.Compatibility;
+using System.Windows.Xps.Packaging;
 
 namespace WarehouseLabelPrintingSystem.ViewModel
 {
