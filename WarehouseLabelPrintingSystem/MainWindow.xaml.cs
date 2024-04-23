@@ -30,7 +30,7 @@ namespace WarehouseLabelPrintingSystem
 
                 Root? root = JsonConvert.DeserializeObject<Root>(jsonResponse!);
 
-                if(root!.status)
+                if (root!.status)
                 {
                     isConnection_text.Text = "Successful connection to the API";
 
@@ -62,7 +62,7 @@ namespace WarehouseLabelPrintingSystem
         {
             Product selectedProduct = (Product)ListView_Products.SelectedItem;
 
-            if(selectedProduct != null)
+            if (selectedProduct != null)
             {
                 PrintMenuWindow printMenu = new();
                 printMenu.ShowDialog();
@@ -82,7 +82,7 @@ namespace WarehouseLabelPrintingSystem
 
         private void ListView_Products_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if(ListView_Products.SelectedItem != null)
+            if (ListView_Products.SelectedItem != null)
             {
                 Print_Menu.IsEnabled = true;
                 Export_to_PDF.IsEnabled = true;

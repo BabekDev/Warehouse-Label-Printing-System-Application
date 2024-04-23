@@ -2,20 +2,34 @@
 using System.Net.Http;
 using System.Windows;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Configuration;
+using System.Configuration;
+using System.IO;
 
 namespace WarehouseLabelPrintingSystem.Services
 {
     public class DuellAPIService
     {
+        private readonly IConfiguration _configuration;
         public readonly HttpClient _httpClient = new();
-        private const string clientNumber = "client_number=211922&client_token=08383741664a8983416f6d0dfc6fa775";
-        private const string urlProductList = "https://api.kasseservice.no/v1/product/list?length=20&filter%5Bproduct_number%5D=11001";
+        private readonly string clientNumber = "";
+        private readonly string urlProductList = "";
+
+        public DuellAPIService()
+        {
+            var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", true, true);
+
+            _configuration = builder.Build();
+
+            clientNumber = _configuration["Authentication:ClientNumber"];
+            urlProductList = _configuration["Authentication:ProductListURL"];
+        }
 
         public async Task<string> GetAccessToken()
         {
             try
             {
-                string urlToken = "https://api.kasseservice.no/v1/getaccesstokens";
+                string urlToken = _configuration["Authentication:TokenURL"];
                 var requestBody = new StringContent(clientNumber, System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
 
                 var responseToken = await _httpClient.PostAsync(urlToken, requestBody);
