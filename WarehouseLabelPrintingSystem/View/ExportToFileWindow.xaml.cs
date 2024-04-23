@@ -1,17 +1,16 @@
 ﻿using Microsoft.Win32;
 using System.Drawing;
-using System.IO;
-using System.Printing;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Xps.Packaging;
-using System.Windows.Xps;
 using WarehouseLabelPrintingSystem.Model;
 using WarehouseLabelPrintingSystem.Utilities;
 using WarehouseLabelPrintingSystem.ViewModel;
-using PdfSharp.Pdf.IO;
+using System.IO;
+using System.Windows.Documents;
+using iTextSharp.text.pdf;
+using iTextSharp.text;
 
 namespace WarehouseLabelPrintingSystem.View
 {
@@ -30,7 +29,7 @@ namespace WarehouseLabelPrintingSystem.View
 
         private void LoadProductData()
         {
-            if(_product != null )
+            if (_product != null)
             {
                 Product_Id_Text.Text = $"Id: {_product.product_id}";
                 Product_Number_Text.Text = $"Number: {_product.product_number}";
@@ -64,17 +63,20 @@ namespace WarehouseLabelPrintingSystem.View
                 {
                     string filePath = saveFileDialog.FileName;
                     BarcodeGenerationAndSavingToPDF(filePath);
+
+                    RotatePages(filePath, @"C:\Users\Babek-pc\Desktop\test.pdf", 90);
                 }
             }
         }
 
         private void Print_Button_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "PDF files (*.pdf)|*.pdf";
 
             if (openFileDialog.ShowDialog() == true)
             {
-                PrintPDF(openFileDialog.FileName);
+                PrintLabels(openFileDialog.FileName);
             }
         }
 
@@ -134,50 +136,63 @@ namespace WarehouseLabelPrintingSystem.View
                 ProductNumberPosition = new PointF(11f, 0f),
                 UnitPosition = new PointF(160f, -18f),
                 ProductNamePosition = new PointF(10f, 8f),
-                LocationPosition = new PointF(10f, 6f),
+                LocationPosition = new PointF(5f, 3f),
                 BarcodePosition = new PointF(0f, 15f),
-                BarcodeTextPosition = new PointF(6f, 25f),
+                BarcodeTextPosition = new PointF(6f, 27f),
                 NotePosition = new PointF(10f, 0f)
             };
 
             label.GenerateLabel(filePath, _product.barcode!);
         }
 
-        private void PrintPDF(string filePath)
+        public void PrintLabels(string filePath)
         {
-            try
+            PrintDialog printDialog = new PrintDialog();
+
+            if (printDialog.ShowDialog() == true)
             {
-                PrintDialog printDialog = new();
-                printDialog.PageRangeSelection = PageRangeSelection.AllPages;
-                printDialog.UserPageRangeEnabled = true;
-
-                if (printDialog.ShowDialog() == true)
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
                 {
-                    System.Diagnostics.ProcessStartInfo info = new System.Diagnostics.ProcessStartInfo
+                    FixedDocument fixedDoc = new FixedDocument();
+                    Document document = new Document();
+                    PdfReader pdfReader = new PdfReader(fileStream);
+                    for (int pageNumber = 1; pageNumber <= pdfReader.NumberOfPages; pageNumber++)
                     {
-                        Verb = "print",
-                        FileName = filePath,
-                        CreateNoWindow = true,
-                        WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
-                    };
+                        // PdfImportedPage pdfImportedPage = printDialog.PrintableArea == PrintableArea.A4 ? printDialog.PrintableArea == PrintableArea.A3 : 0 ? pdfWriter.GetImportedPage(pdfReader, pageNumber) : pdfWriter.GetImportedPage(pdfReader, pageNumber);
+                        PageContent pageContent = new PageContent();
+                        FixedPage fixedPage = new FixedPage();
+                        fixedPage.Width = printDialog.PrintableAreaWidth;
+                        fixedPage.Height = printDialog.PrintableAreaHeight;
+                        //fixedPage.Children.Add(pageContent);
 
-                    System.Diagnostics.Process p = new()
-                    {
-                        StartInfo = info
-                    };
-                    p.Start();
+                        ((System.Windows.Markup.IAddChild)pageContent).AddChild(fixedPage);
+                        fixedDoc.Pages.Add(pageContent);
+                    }
 
-                    p.WaitForInputIdle();
-
-                    Thread.Sleep(3000);
-                    if (false == p.CloseMainWindow())
-                        p.Kill();
+                    printDialog.PrintDocument(fixedDoc.DocumentPaginator, "Print PDF");
                 }
             }
-            catch (Exception ex)
+        }
+
+        private static void RotatePages(string pdfFilePath, string outputPath, int rotateDegree)
+        {
+            PdfReader reader = new(pdfFilePath);
+            int pagesCount = reader.NumberOfPages;
+
+            for (int n = 1; n <= pagesCount; n++)
             {
-                MessageBox.Show("An error occurred while printing the PDF file: " + ex.Message);
+                PdfDictionary page = reader.GetPageN(n);
+                PdfNumber rotate = page.GetAsNumber(PdfName.ROTATE);
+
+                int rotation =
+                        rotate == null ? rotateDegree : (rotate.IntValue + rotateDegree) % 360;
+
+                page.Put(PdfName.ROTATE, new PdfNumber(rotation));
             }
+
+            PdfStamper stamper = new(reader, new FileStream(outputPath, FileMode.Create));
+            stamper.Close();
+            reader.Close();
         }
     }
 }

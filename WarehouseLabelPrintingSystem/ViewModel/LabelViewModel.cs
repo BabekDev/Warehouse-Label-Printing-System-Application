@@ -5,7 +5,6 @@ using System.IO;
 using ZXing.Common;
 using ZXing;
 using ZXing.Windows.Compatibility;
-using System.Windows.Xps.Packaging;
 
 namespace WarehouseLabelPrintingSystem.ViewModel
 {
@@ -59,8 +58,8 @@ namespace WarehouseLabelPrintingSystem.ViewModel
 
             document.Add(new Paragraph(ProductNumber, productNumberFont) { SpacingBefore = ProductNumberPosition.Y, IndentationLeft = ProductNumberPosition.X });
             document.Add(new Paragraph(Unit, productUnitFont) { SpacingBefore = UnitPosition.Y, IndentationLeft = UnitPosition.X });
-            document.Add(new Paragraph(ProductName, productNameFont) { SpacingBefore = ProductNamePosition.Y, IndentationLeft = ProductNamePosition.X });
-            document.Add(new Paragraph(Location, productLocationFont) { SpacingBefore = LocationPosition.Y, IndentationLeft = LocationPosition.X });
+            document.Add(new Paragraph(ProductName, productNameFont) { IndentationLeft = ProductNamePosition.X });
+            document.Add(new Paragraph(Location, productLocationFont) { SpacingBefore = -5, IndentationLeft = LocationPosition.X });
 
             var barcodeImage = writerEan.Write(barcodeStr);
             iTextSharp.text.Image barcode = iTextSharp.text.Image.GetInstance(barcodeImage, System.Drawing.Imaging.ImageFormat.Bmp);
