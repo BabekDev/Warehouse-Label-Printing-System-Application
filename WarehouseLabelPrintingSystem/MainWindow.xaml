@@ -42,10 +42,9 @@
         </Style>
     </Window.Resources>
     <Grid Cursor="Arrow">
-        <TextBlock x:Name="isConnection_text" TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Top" Foreground="#FF70FF72" HorizontalAlignment="Right" Width="176" Margin="0,9,6,0"/>
-        <Button x:Name="Print_Menu" Style="{StaticResource CustomButtonStyle}" Content="Print Menu" HorizontalAlignment="Left" Margin="3,3,0,0" VerticalAlignment="Top" Width="83" Height="28" FontFamily="Arial" ForceCursor="True" FontSize="14" Cursor="Hand" RenderTransformOrigin="1,0" Click="Print_Menu_Click" IsEnabled="False"/>
-        <Button x:Name="Export_to_PDF" Style="{StaticResource CustomButtonStyle}" Content="Export to PDF" HorizontalAlignment="Left" Margin="91,3,0,0" VerticalAlignment="Top" Width="100" Height="28" FontFamily="Arial" ForceCursor="True" FontSize="14" Cursor="Hand" RenderTransformOrigin="1,0" BorderBrush="DimGray" Click="Export_to_PDF_Click" IsEnabled="False"/>
-        <ListView x:Name="ListView_Products" SelectionMode="Single" Margin="-1,34,-1,-1" SelectionChanged="ListView_Products_SelectionChanged" MouseDown="ListView_Products_MouseDown" Background="White" BorderBrush="#FF080808" FontSize="14">
+        <TextBlock x:Name="isConnection_text" TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Top" Foreground="#FF70FF72" HorizontalAlignment="Right" Width="220" Margin="0,9,6,0"/>
+        <Button x:Name="Export_to_PDF" Style="{StaticResource CustomButtonStyle}" Content="Export to PDF" HorizontalAlignment="Left" Margin="5,3,0,0" VerticalAlignment="Top" Width="100" Height="28" FontFamily="Arial" ForceCursor="True" FontSize="14" Cursor="Hand" RenderTransformOrigin="1,0" BorderBrush="DimGray" Click="Export_to_PDF_Click" IsEnabled="False"/>
+        <ListView x:Name="ListView_Products" SelectionMode="Single" Margin="-1,34,-1,-1" SelectionChanged="ListView_Products_SelectionChanged" Background="White" BorderBrush="#FF080808" FontSize="14">
             <ListView.View>
                 <GridView x:Name="GridView_Products" />
             </ListView.View>
