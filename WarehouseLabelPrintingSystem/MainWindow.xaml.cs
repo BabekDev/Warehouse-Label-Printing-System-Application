@@ -50,6 +50,11 @@ namespace WarehouseLabelPrintingSystem
                 // Check if the connection and data retrieval were successful
                 if (root != null && root.status)
                 {
+                    progress_connectionAPI.IsIndeterminate = false;
+                    Export_to_PDF.Visibility = Visibility.Visible;
+                    progress_connectionAPI.Visibility = Visibility.Collapsed;
+                    text_connectionAPI.Visibility = Visibility.Collapsed;
+
                     _logger.LogInformation("Successfully connected to the API.");
                     isConnection_text.Text = "Successfully connected to the API";
 
