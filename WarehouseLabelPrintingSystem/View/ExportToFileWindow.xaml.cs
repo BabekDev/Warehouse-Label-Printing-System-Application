@@ -74,7 +74,7 @@ namespace WarehouseLabelPrintingSystem.View
                         BarcodeGenerationAndSavingToPDF(filePath);
                         _logger.LogInformation($"PDF file saved at: {filePath}");
 
-                        RotatePages(filePath, "C:/Users/Babek-pc/Desktop/test.pdf", 90);
+                        RotatePages(filePath, filePath, 90);
                     }
                     catch (Exception ex)
                     {

@@ -1,9 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
 using WarehouseLabelPrintingSystem.Model;
 using WarehouseLabelPrintingSystem.Services;
@@ -19,16 +22,54 @@ namespace WarehouseLabelPrintingSystem
         // Logger for this window
         private readonly ILogger<MainWindow> _logger;
 
+        private ObservableCollection<Product> _products;
+        public ICollectionView FilteredProducts { get; set; }
+
+        private string _currentSortColumn = "";
+        private ListSortDirection _currentSortDirection = ListSortDirection.Ascending;
+
         public MainWindow()
         {
             InitializeComponent();
 
-            // Initialize logger for this window
             _logger = App.LoggerFactory!.CreateLogger<MainWindow>();
             _logger.LogInformation("MainWindow initialized.");
 
-            // Connect to the API and load products
             ConnectToApi();
+
+            _currentSortColumn = string.Empty;
+            _currentSortDirection = ListSortDirection.Ascending;
+
+            var productColumns = CreateProductColumns();
+            var gridView = (GridView)ListView_Products.View;
+
+            foreach (var column in productColumns)
+            {
+                gridView.Columns.Add(column);
+            }
+
+            _products = new ObservableCollection<Product>();
+
+            FilteredProducts = CollectionViewSource.GetDefaultView(_products);
+            FilteredProducts.Filter = ProductFilter;
+            ListView_Products.ItemsSource = FilteredProducts;
+        }
+
+        private bool ProductFilter(object item)
+        {
+            if (item is Product product)
+            {
+                string searchNumber = search_box_number.Text ?? "";
+                string searchName = search_box_name.Text ?? "";
+
+                bool matchesNumber = product.product_number!.Contains(searchNumber, StringComparison.OrdinalIgnoreCase);
+                bool matchesName = product.product_name!.Contains(searchName, StringComparison.OrdinalIgnoreCase);
+
+                // The product matches if it satisfies both search conditions
+                return matchesNumber && matchesName;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -39,27 +80,27 @@ namespace WarehouseLabelPrintingSystem
             try
             {
                 _logger.LogInformation("Attempting to connect to the API...");
-
-                // Get the access token and retrieve product list
                 string? token = await _apiService.GetAccessToken();
                 string? jsonResponse = await _apiService.GetProductList(token);
 
-                // Deserialize the JSON response
                 Root? root = JsonConvert.DeserializeObject<Root>(jsonResponse!);
 
-                // Check if the connection and data retrieval were successful
                 if (root != null && root.status)
                 {
                     progress_connectionAPI.IsIndeterminate = false;
+                    isConnection_text.Visibility = Visibility.Visible;
                     Export_to_PDF.Visibility = Visibility.Visible;
                     progress_connectionAPI.Visibility = Visibility.Collapsed;
                     text_connectionAPI.Visibility = Visibility.Collapsed;
+                    search_box_number.Visibility = Visibility.Visible;
+                    search_box_number_title.Visibility = Visibility.Visible;
+                    search_box_name.Visibility = Visibility.Visible;
+                    search_box_name_title.Visibility = Visibility.Visible;
 
                     _logger.LogInformation("Successfully connected to the API.");
                     isConnection_text.Text = "Successfully connected to the API";
 
-                    // Create columns for the GridView and display products
-                    IEnumerable<GridViewColumn> productColumns = CreateProductColumns();
+                    var productColumns = CreateProductColumns();
                     GridView_Products.Columns.Clear();
 
                     foreach (var column in productColumns)
@@ -67,7 +108,11 @@ namespace WarehouseLabelPrintingSystem
                         GridView_Products.Columns.Add(column);
                     }
 
-                    ListView_Products.ItemsSource = root.products;
+                    _products.Clear();
+                    foreach (var product in root.products!)
+                    {
+                        _products.Add(product);
+                    }
                 }
                 else
                 {
@@ -78,7 +123,6 @@ namespace WarehouseLabelPrintingSystem
             }
             catch (Exception ex)
             {
-                // Log the error and display a message to the user
                 _logger.LogError($"Error connecting to the API: {ex.Message}", ex);
                 MessageBox.Show($"Error: {ex.Message}");
             }
@@ -123,37 +167,75 @@ namespace WarehouseLabelPrintingSystem
         /// <returns>A list of GridViewColumn objects.</returns>
         private List<GridViewColumn> CreateProductColumns()
         {
-            _logger.LogInformation("Creating product columns.");
-
             string[] desiredProperties = new[]
             {
-                "product_id",
-                "product_name",
-                "product_number",
-                "barcode",
-                "unit"
-            };
+            "product_id",
+            "product_name",
+            "product_number",
+            "barcode",
+            "unit"
+        };
 
-            List<GridViewColumn> columns = new();
+            var columns = new List<GridViewColumn>();
 
             foreach (var propertyName in desiredProperties)
             {
-                PropertyInfo? property = typeof(Product).GetProperty(propertyName);
+                var property = typeof(Product).GetProperty(propertyName);
 
                 if (property != null)
                 {
                     var column = new GridViewColumn
                     {
-                        Header = property.Name,
-                        DisplayMemberBinding = new Binding(property.Name)
+                        Header = propertyName, // Set the column header
+                        DisplayMemberBinding = new Binding(propertyName),
                     };
-                    columns.Add(column);
 
-                    _logger.LogInformation($"Added column '{property.Name}' to GridView.");
+                    columns.Add(column);
                 }
             }
 
             return columns;
+        }
+
+        private void ListView_Products_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            var clickedElement = e.OriginalSource as FrameworkElement;
+
+            while (clickedElement != null && clickedElement.GetType() != typeof(GridViewColumnHeader))
+            {
+                clickedElement = VisualTreeHelper.GetParent(clickedElement) as FrameworkElement;
+            }
+
+            if (clickedElement is GridViewColumnHeader header)
+            {
+                var columnHeader = header.Column.Header.ToString();
+
+                if (_currentSortColumn == columnHeader)
+                {
+                    _currentSortDirection = _currentSortDirection == ListSortDirection.Ascending
+                        ? ListSortDirection.Descending
+                        : ListSortDirection.Ascending;
+                }
+                else
+                {
+                    _currentSortColumn = columnHeader!;
+                    _currentSortDirection = ListSortDirection.Ascending;
+                }
+
+                FilteredProducts.SortDescriptions.Clear();
+                FilteredProducts.SortDescriptions.Add(new SortDescription(_currentSortColumn, _currentSortDirection));
+                FilteredProducts.Refresh();
+            }
+        }
+
+        private void search_box_number_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            FilteredProducts.Refresh();
+        }
+
+        private void search_box_name_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            FilteredProducts.Refresh();
         }
     }
 }

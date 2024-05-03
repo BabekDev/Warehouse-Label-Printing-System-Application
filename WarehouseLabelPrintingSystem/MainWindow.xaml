@@ -8,7 +8,6 @@
         mc:Ignorable="d"
         Title="Warehouse Label Printing System" Height="450" Width="800" Background="#FF424242" Icon="/logo.png">
     <Window.Resources>
-        <!-- Определение стиля кнопки -->
         <Style x:Key="CustomButtonStyle" TargetType="{x:Type Button}">
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
@@ -41,15 +40,19 @@
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid Cursor="Arrow">
-        <TextBlock x:Name="isConnection_text" TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Top" Foreground="#FF70FF72" HorizontalAlignment="Right" Width="220" Margin="0,9,6,0"/>
-        <Button x:Name="Export_to_PDF" Style="{StaticResource CustomButtonStyle}" Content="Export to PDF" HorizontalAlignment="Left" Margin="5,3,0,0" VerticalAlignment="Top" Width="100" Height="28" FontFamily="Arial" ForceCursor="True" FontSize="14" Cursor="Hand" RenderTransformOrigin="1,0" BorderBrush="DimGray" Click="Export_to_PDF_Click" Visibility="Hidden" IsEnabled="False"/>
-        <ListView x:Name="ListView_Products" SelectionMode="Single" Margin="-1,34,-1,-1" SelectionChanged="ListView_Products_SelectionChanged" Background="White" BorderBrush="#FF080808" FontSize="14">
+    <Grid Cursor="Arrow" x:Name="main_grid">
+        <TextBlock x:Name="isConnection_text" TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Top" Foreground="#FF70FF72" HorizontalAlignment="Right" Width="220" Margin="0,22,6,0"/>
+        <Button x:Name="Export_to_PDF" Style="{StaticResource CustomButtonStyle}" Content="Export to PDF" Visibility="Collapsed" HorizontalAlignment="Left" Margin="13,14,0,0" VerticalAlignment="Top" Width="100" Height="32" FontFamily="Arial" ForceCursor="True" FontSize="14" Cursor="Hand" RenderTransformOrigin="1,0" BorderBrush="DimGray" Click="Export_to_PDF_Click"  IsEnabled="False"/>
+        <ListView x:Name="ListView_Products" SelectionMode="Single" Margin="-1,60,-1,-1" SelectionChanged="ListView_Products_SelectionChanged" Background="White" BorderBrush="#FF080808" FontSize="14" ItemsSource="{Binding FilteredProducts}" PreviewMouseLeftButtonUp="ListView_Products_PreviewMouseLeftButtonUp">
             <ListView.View>
                 <GridView x:Name="GridView_Products" />
             </ListView.View>
         </ListView>
-        <ProgressBar x:Name="progress_connectionAPI" IsIndeterminate="True" Height="28" Margin="0,3,4,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="187" Background="#FF424242" BorderBrush="White"/>
-        <TextBlock x:Name="text_connectionAPI" Margin="0,9,5,0" TextWrapping="Wrap" Text="API connection and data loading..." VerticalAlignment="Top" HorizontalAlignment="Right" Width="185" Foreground="#FFE8E8E8" TextAlignment="Center"/>
+        <ProgressBar x:Name="progress_connectionAPI" IsIndeterminate="True" Height="28" Margin="0,16,4,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="222" Background="#FF424242" BorderBrush="White"/>
+        <TextBlock x:Name="text_connectionAPI" Margin="0,22,5,0" TextWrapping="Wrap" Text="API connection and data loading..." VerticalAlignment="Top" HorizontalAlignment="Right" Width="221" Foreground="#FFD4D4D4" TextAlignment="Center" FontStyle="Italic"/>
+        <TextBox x:Name="search_box_number" Visibility="Collapsed" AcceptsReturn="False" HorizontalAlignment="Left" Margin="127,28,0,0" TextWrapping="NoWrap" Text="" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="180" Height="28" BorderBrush="#FF6C6C6C" Background="#FF505050" Foreground="White" FontSize="13" TextChanged="search_box_number_TextChanged"/>
+        <TextBlock x:Name="search_box_number_title" Visibility="Collapsed" HorizontalAlignment="Left" Margin="127,8,0,0" TextWrapping="Wrap" Text="Search by number..." VerticalAlignment="Top" Width="160" Height="18" Foreground="#FFE4E4E4" FontSize="13" FontStyle="Italic"/>
+        <TextBox x:Name="search_box_name" Visibility="Collapsed" AcceptsReturn="False" HorizontalAlignment="Left" Margin="319,28,0,0" TextWrapping="NoWrap" Text="" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="180" Height="28" BorderBrush="#FF6C6C6C" Background="#FF505050" Foreground="White" FontSize="13" TextChanged="search_box_name_TextChanged"/>
+        <TextBlock x:Name="search_box_name_title" Visibility="Collapsed" HorizontalAlignment="Left" Margin="320,8,0,0" TextWrapping="Wrap" Text="Search by name..." VerticalAlignment="Top" Width="160" Height="18" Foreground="#FFE4E4E4" FontSize="13" FontStyle="Italic"/>
     </Grid>
 </Window>
