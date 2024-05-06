@@ -31,16 +31,34 @@ namespace WarehouseLabelPrintingSystem.ViewModel
         public PointF BarcodeTextPosition { get; set; }
         public PointF NotePosition { get; set; }
 
-        public LabelViewModel()
+        //public LabelViewModel()
+        //{
+        //    // Initialize default positions for elements
+        //    BarcodePosition = new PointF(5f, 15f);
+        //    ProductNumberPosition = new PointF(10f, 120f);
+        //    ProductNamePosition = new PointF(10f, 75f);
+        //    UnitPosition = new PointF(158f, 125f);
+        //    LocationPosition = new PointF(10f, 48f);
+        //    BarcodeTextPosition = new PointF(12f, 5f);
+        //    NotePosition = new PointF(10f, 0f);
+        //}
+
+        public LabelViewModel(
+            PointF barcodePosition,
+            PointF productNumberPosition,
+            PointF productNamePosition,
+            PointF unitPosition,
+            PointF locationPosition,
+            PointF barcodeTextPosition,
+            PointF notePosition)
         {
-            // Initialize default positions for elements
-            BarcodePosition = new PointF(5f, 15f);
-            ProductNumberPosition = new PointF(10f, 120f);
-            ProductNamePosition = new PointF(10f, 75f);
-            UnitPosition = new PointF(158f, 125f);
-            LocationPosition = new PointF(10f, 48f);
-            BarcodeTextPosition = new PointF(12f, 5f);
-            NotePosition = new PointF(10f, 0f);
+            BarcodePosition = barcodePosition;
+            ProductNumberPosition = productNumberPosition;
+            ProductNamePosition = productNamePosition;
+            UnitPosition = unitPosition;
+            LocationPosition = locationPosition;
+            BarcodeTextPosition = barcodeTextPosition;
+            NotePosition = notePosition;
         }
 
         /// <summary>
@@ -48,7 +66,7 @@ namespace WarehouseLabelPrintingSystem.ViewModel
         /// </summary>
         /// <param name="filePath">Path to save the PDF file.</param>
         /// <param name="barcodeStr">Barcode string to be included in the label.</param>
-        public void GenerateLabel(string filePath, string barcodeStr)
+        public void GenerateLabelSize208x148(string filePath, string barcodeStr)
         {
             try
             {
@@ -140,6 +158,105 @@ namespace WarehouseLabelPrintingSystem.ViewModel
                     canvas,
                     Element.ALIGN_LEFT,
                     new Phrase(BarcodeText, FontFactory.GetFont(FontFactory.HELVETICA, 12, BaseColor.BLACK)),
+                    BarcodeTextPosition.X,
+                    BarcodeTextPosition.Y,
+                    0
+                );
+
+                document.Close(); // Close the document to save changes
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions and provide meaningful feedback
+                Console.WriteLine($"Error while generating label PDF: {ex.Message}");
+            }
+        }
+
+        public void GenerateLabelSize39x27(string filePath, string barcodeStr)
+        {
+            try
+            {
+                // Set up the PDF document with specific dimensions and margins
+                Document document = new(new Rectangle(39f, 27f), 0, 0, 0, 0);
+                PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
+
+                document.Open();
+
+                PdfContentByte canvas = writer.DirectContent;
+
+                // Set the font for ProductName
+                var productNameFont = FontFactory.GetFont(FontFactory.HELVETICA, 3, BaseColor.BLACK);
+
+                // Define an area for ProductName with wrapping text
+                var productNameWidth = 30f;  // Width of the area
+                var productNameHeight = 17f;  // Height for text wrapping
+
+                Rectangle productNameRect = new(
+                    ProductNamePosition.X,
+                    ProductNamePosition.Y,
+                    ProductNamePosition.X + productNameWidth,
+                    ProductNamePosition.Y + productNameHeight
+                );
+
+                // Add ProductName with text wrapping
+                ColumnText ct = new(canvas);
+                ct.SetSimpleColumn(
+                    new Phrase(ProductName, productNameFont),
+                    productNameRect.Left,
+                    productNameRect.Bottom,
+                    productNameRect.Right,
+                    productNameRect.Top,
+                    15f, // Leading between lines
+                    Element.ALIGN_LEFT
+                );
+
+                ct.Go();
+
+                // Place other elements using ColumnText with predefined positions
+                ColumnText.ShowTextAligned(
+                    canvas,
+                    Element.ALIGN_LEFT,
+                    new Phrase(ProductNumber, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 5, BaseColor.BLACK)),
+                    ProductNumberPosition.X,
+                    ProductNumberPosition.Y,
+                    0
+                );
+
+                ColumnText.ShowTextAligned(
+                    canvas,
+                    Element.ALIGN_LEFT,
+                    new Phrase(Unit, FontFactory.GetFont(FontFactory.HELVETICA, 3, BaseColor.BLACK)),
+                    UnitPosition.X,
+                    UnitPosition.Y,
+                    0
+                );
+
+
+                // Generate the barcode using ZXing and add it to the PDF
+                var barcodeWriter = new BarcodeWriter
+                {
+                    Format = BarcodeFormat.EAN_13,
+                    Options = new EncodingOptions
+                    {
+                        Width = 200,
+                        Height = 30,
+                        NoPadding = true,
+                        PureBarcode = true
+                    }
+                };
+
+                var barcodeImage = barcodeWriter.Write(barcodeStr);
+                var barcode = Image.GetInstance(barcodeImage, System.Drawing.Imaging.ImageFormat.Bmp);
+
+                barcode.ScaleAbsolute(30f, 5f);
+
+                barcode.SetAbsolutePosition(BarcodePosition.X, BarcodePosition.Y);
+                canvas.AddImage(barcode);
+
+                ColumnText.ShowTextAligned(
+                    canvas,
+                    Element.ALIGN_LEFT,
+                    new Phrase(BarcodeText, FontFactory.GetFont(FontFactory.HELVETICA, 3, BaseColor.BLACK)),
                     BarcodeTextPosition.X,
                     BarcodeTextPosition.Y,
                     0

@@ -47,7 +47,7 @@
             <ColumnDefinition Width="123*"/>
             <ColumnDefinition Width="12*"/>
         </Grid.ColumnDefinitions>
-        
+
         <Rectangle Height="99" Margin="10,5,0,0" Stroke="Black" VerticalAlignment="Top" Grid.ColumnSpan="3" Fill="#FF424242"/>
         <TextBlock x:Name="Product_Id_Text" Margin="15,10,134,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Height="19" Foreground="White" Grid.ColumnSpan="2"/>
         <TextBlock x:Name="Product_Number_Text" Margin="15,34,134,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Height="19" Foreground="White" Grid.ColumnSpan="2"/>
@@ -55,7 +55,7 @@
         <TextBlock x:Name="Product_Unit_Text" Margin="15,82,134,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Height="19" Foreground="White" Grid.ColumnSpan="2"/>
         <TextBlock x:Name="Product_Name_Text" Margin="5,10,5,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" Height="19" Grid.Column="1" Foreground="White" Grid.ColumnSpan="2"/>
         <Rectangle Grid.Column="1" Height="70" Margin="5,34,0,0" VerticalAlignment="Top" Fill="White" Grid.ColumnSpan="3"/>
-        <TextBlock x:Name="Label_Size_Text" Text="Label size: 208mm x 148mm" Margin="10,47,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="24" Grid.Column="1" Foreground="Black" FontSize="14" TextAlignment="Center" TextDecorations="Underline" Grid.ColumnSpan="2"/>
+        <TextBlock x:Name="Label_Size_Text" Text="Label size:" Margin="5,46,49,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="23" Foreground="Black" FontSize="14" TextAlignment="Center" TextDecorations="Underline" Grid.Column="1"/>
         <Button x:Name="Save_to_File" Style="{StaticResource CustomButtonStyle}" Grid.Column="2" Content="Save to PDF" Margin="4,76,0,0" VerticalAlignment="Top" Height="28" Cursor="Hand" FontSize="14" Click="Save_to_File_Click" IsEnabled="False"/>
         <Button x:Name="Print_Button" Style="{StaticResource CustomButtonStyle}" Grid.Column="1" Content="Start Printing" Margin="10,76,5,0" VerticalAlignment="Top" Height="28" Cursor="Hand" FontSize="14" Click="Print_Button_Click"/>
         <ListView x:Name="ListView_CustomFields" SelectionMode="Single" Margin="0,109,0,0" Grid.ColumnSpan="4" FontSize="14" SelectionChanged="ListView_CustomFields_SelectionChanged" Foreground="#FF011B5D">
@@ -65,5 +65,9 @@
                 </GridView>
             </ListView.View>
         </ListView>
+        <ComboBox x:Name="comboBox_labels" Grid.Column="1" Grid.ColumnSpan="2" Margin="87,46,0,0" VerticalAlignment="Top">
+            <ComboBoxItem>208mm x 148mm</ComboBoxItem>
+            <ComboBoxItem>39mm x 27mm</ComboBoxItem>
+        </ComboBox>
     </Grid>
 </Window>

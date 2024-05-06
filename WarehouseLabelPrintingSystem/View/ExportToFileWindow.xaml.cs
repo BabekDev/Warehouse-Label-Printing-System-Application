@@ -8,6 +8,7 @@ using WarehouseLabelPrintingSystem.ViewModel;
 using System.IO;
 using iTextSharp.text.pdf;
 using Microsoft.Extensions.Logging;
+using System.Drawing;
 
 namespace WarehouseLabelPrintingSystem.View
 {
@@ -26,6 +27,8 @@ namespace WarehouseLabelPrintingSystem.View
 
             _logger = App.LoggerFactory!.CreateLogger<ExportToFileWindow>();
             _logger.LogInformation("ExportToFileWindow initialized");
+
+            comboBox_labels.SelectedIndex = 0;
 
             LoadProductData();
         }
@@ -151,9 +154,9 @@ namespace WarehouseLabelPrintingSystem.View
         /// </summary>
         private void BarcodeGenerationAndSavingToPDF(string filePath)
         {
-            var selectedField = (CustomField?)ListView_CustomFields.SelectedItem;
+            var selectedField = ListView_CustomFields.SelectedItem as CustomField;
 
-            var label = new LabelViewModel
+            var commonLabelProperties = new
             {
                 ProductNumber = _product.product_number,
                 ProductName = _product.product_name,
@@ -162,7 +165,41 @@ namespace WarehouseLabelPrintingSystem.View
                 BarcodeText = BarcodeFormatNumber.FormatNumber(_product.barcode!)
             };
 
-            label.GenerateLabel(filePath, _product.barcode!);
+            var labelPositions = new Dictionary<int, (PointF, PointF, PointF, PointF, PointF, PointF, PointF)>
+            {
+                [0] = (new PointF(5f, 15f), new PointF(10f, 120f), new PointF(10f, 75f),
+                      new PointF(158f, 125f), new PointF(10f, 48f), new PointF(12f, 5f),
+                      new PointF(10f, 0f)),
+
+                [1] = (new PointF(4.5f, 4f), new PointF(2f, 20f), new PointF(2f, 14f),
+                      new PointF(27f, 22f), new PointF(10f, 48f), new PointF(7f, 1.5f),
+                      new PointF(10f, 0f))
+            };
+
+            if (labelPositions.TryGetValue(comboBox_labels.SelectedIndex, out var positions))
+            {
+                var label = new LabelViewModel(positions.Item1, positions.Item2, positions.Item3,
+                                               positions.Item4, positions.Item5, positions.Item6,
+                                               positions.Item7)
+                {
+                    ProductNumber = commonLabelProperties.ProductNumber,
+                    ProductName = commonLabelProperties.ProductName,
+                    Unit = commonLabelProperties.Unit,
+                    Location = commonLabelProperties.Location,
+                    BarcodeText = commonLabelProperties.BarcodeText
+                };
+
+                switch (comboBox_labels.SelectedIndex)
+                {
+                    case 0:
+                        label.GenerateLabelSize208x148(filePath, _product.barcode!);
+                        break;
+
+                    case 1:
+                        label.GenerateLabelSize39x27(filePath, _product.barcode!);
+                        break;
+                }
+            }
         }
 
         /// <summary>
