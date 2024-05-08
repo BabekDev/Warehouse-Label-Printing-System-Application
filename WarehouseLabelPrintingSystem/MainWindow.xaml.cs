@@ -1,8 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using iTextSharp.text.pdf;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reflection;
+using System.Drawing;
+using System.Drawing.Printing;
+using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -10,7 +14,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using WarehouseLabelPrintingSystem.Model;
 using WarehouseLabelPrintingSystem.Services;
-using WarehouseLabelPrintingSystem.View;
+using WarehouseLabelPrintingSystem.Utilities;
+using WarehouseLabelPrintingSystem.ViewModel;
 
 namespace WarehouseLabelPrintingSystem
 {
@@ -34,6 +39,8 @@ namespace WarehouseLabelPrintingSystem
 
             _logger = App.LoggerFactory!.CreateLogger<MainWindow>();
             _logger.LogInformation("MainWindow initialized.");
+
+            comboBox_labels.SelectedIndex = 0;
 
             ConnectToApi();
 
@@ -96,6 +103,7 @@ namespace WarehouseLabelPrintingSystem
                     search_box_number_title.Visibility = Visibility.Visible;
                     search_box_name.Visibility = Visibility.Visible;
                     search_box_name_title.Visibility = Visibility.Visible;
+                    comboBox_labels.Visibility = Visibility.Visible;
 
                     _logger.LogInformation("Successfully connected to the API.");
                     isConnection_text.Text = "Successfully connected to the API";
@@ -141,8 +149,42 @@ namespace WarehouseLabelPrintingSystem
             {
                 _logger.LogInformation($"Exporting product '{selectedProduct.product_name}' to PDF.");
 
-                var exportWindow = new ExportToFileWindow(selectedProduct);
-                exportWindow.ShowDialog();
+                var pattern = @"^\d+-\d+-[A-Za-z]-\d+$";
+                var customField = selectedProduct.custom_fields!.FirstOrDefault(cf => cf.value != null && Regex.IsMatch(cf.value, pattern));
+                string? foundValue = customField?.value;
+
+                if (foundValue != null)
+                {
+                    string projectRoot = AppDomain.CurrentDomain.BaseDirectory;
+                    string pdfFolderPath = Path.Combine(projectRoot, "PDF");
+
+                    if (!Directory.Exists(pdfFolderPath))
+                    {
+                        Directory.CreateDirectory(pdfFolderPath);
+                    }
+
+                    string timestamp = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
+                    string fileName = $"{timestamp}.pdf";
+
+                    string filePath = Path.Combine(pdfFolderPath, fileName);
+
+                    try
+                    {
+                        BarcodeGenerationAndSavingToPDF(filePath, foundValue, selectedProduct);
+                        _logger.LogInformation($"PDF file saved at: {filePath}");
+
+                        LabelViewModel.PrintPdf(filePath, "Honeywell PC42d (203 dpi)", comboBox_labels.SelectedIndex);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Error saving PDF: {ex.Message}");
+                        MessageBox.Show("Error saving PDF: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("The location of this product was not found.");
+                }
             }
         }
 
@@ -169,12 +211,12 @@ namespace WarehouseLabelPrintingSystem
         {
             string[] desiredProperties = new[]
             {
-            "product_id",
-            "product_name",
-            "product_number",
-            "barcode",
-            "unit"
-        };
+                "product_id",
+                "product_name",
+                "product_number",
+                "barcode",
+                "unit"
+            };
 
             var columns = new List<GridViewColumn>();
 
@@ -236,6 +278,54 @@ namespace WarehouseLabelPrintingSystem
         private void search_box_name_TextChanged(object sender, TextChangedEventArgs e)
         {
             FilteredProducts.Refresh();
+        }
+
+        private void BarcodeGenerationAndSavingToPDF(string filePath, string location, Product product)
+        {
+            var commonLabelProperties = new
+            {
+                ProductNumber = product.product_number,
+                ProductName = product.product_name,
+                Unit = product.unit,
+                Location = location,
+                BarcodeText = BarcodeFormatNumber.FormatNumber(product.barcode!)
+            };
+
+            var labelPositions = new Dictionary<int, (PointF, PointF, PointF, PointF, PointF, PointF, PointF)>
+            {
+                [0] = (new PointF(5f, 15f), new PointF(10f, 120f), new PointF(10f, 75f),
+                      new PointF(158f, 125f), new PointF(10f, 48f), new PointF(12f, 5f),
+                      new PointF(10f, 0f)),
+
+                [1] = (new PointF(4.5f, 4f), new PointF(2f, 20f), new PointF(2f, 0f),
+                      new PointF(27f, 22f), new PointF(10f, 48f), new PointF(7f, 1.5f),
+                      new PointF(10f, 0f))
+            };
+
+            if (labelPositions.TryGetValue(comboBox_labels.SelectedIndex, out var positions))
+            {
+                var label = new LabelViewModel(positions.Item1, positions.Item2, positions.Item3,
+                                               positions.Item4, positions.Item5, positions.Item6,
+                                               positions.Item7)
+                {
+                    ProductNumber = commonLabelProperties.ProductNumber,
+                    ProductName = commonLabelProperties.ProductName,
+                    Unit = commonLabelProperties.Unit,
+                    Location = commonLabelProperties.Location,
+                    BarcodeText = commonLabelProperties.BarcodeText
+                };
+
+                switch (comboBox_labels.SelectedIndex)
+                {
+                    case 0:
+                        label.GenerateLabelSize208x148(filePath, product.barcode!);
+                        break;
+
+                    case 1:
+                        label.GenerateLabelSize39x27(filePath, product.barcode!);
+                        break;
+                }
+            }
         }
     }
 }
