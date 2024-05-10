@@ -6,8 +6,11 @@ using ZXing.Common;
 using ZXing;
 using ZXing.Windows.Compatibility;
 using Rectangle = iTextSharp.text.Rectangle;
-using System.Diagnostics;
 using Image = iTextSharp.text.Image;
+using System.Drawing.Printing;
+using System.Printing;
+using System.Windows;
+
 
 namespace WarehouseLabelPrintingSystem.ViewModel
 {
@@ -33,22 +36,28 @@ namespace WarehouseLabelPrintingSystem.ViewModel
 
         public LabelViewModel()
         {
-            // Initialize default positions for elements
-            BarcodePosition = new PointF(5f, 15f);
-            ProductNumberPosition = new PointF(10f, 120f);
-            ProductNamePosition = new PointF(10f, 75f);
-            UnitPosition = new PointF(158f, 125f);
-            LocationPosition = new PointF(10f, 48f);
-            BarcodeTextPosition = new PointF(12f, 5f);
-            NotePosition = new PointF(10f, 0f);
+            
         }
 
-        /// <summary>
-        /// Generates a label PDF with the specified barcode and file path.
-        /// </summary>
-        /// <param name="filePath">Path to save the PDF file.</param>
-        /// <param name="barcodeStr">Barcode string to be included in the label.</param>
-        public void GenerateLabel(string filePath, string barcodeStr)
+        public LabelViewModel(
+            PointF barcodePosition,
+            PointF productNumberPosition,
+            PointF productNamePosition,
+            PointF unitPosition,
+            PointF locationPosition,
+            PointF barcodeTextPosition,
+            PointF notePosition)
+        {
+            BarcodePosition = barcodePosition;
+            ProductNumberPosition = productNumberPosition;
+            ProductNamePosition = productNamePosition;
+            UnitPosition = unitPosition;
+            LocationPosition = locationPosition;
+            BarcodeTextPosition = barcodeTextPosition;
+            NotePosition = notePosition;
+        }
+
+        public void GenerateLabelSize208x148(string filePath, string barcodeStr)
         {
             try
             {
@@ -154,31 +163,142 @@ namespace WarehouseLabelPrintingSystem.ViewModel
             }
         }
 
+        public void GenerateLabelSize39x27(string filePath, string barcodeStr)
+        {
+            try
+            {
+                using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    var document = new Document(new Rectangle(39f, 27f), 0, 0, 0, 0);
+                    using (var writer = PdfWriter.GetInstance(document, fileStream))
+                    {
+                        document.Open();
+
+                        var canvas = writer.DirectContent;
+
+                        var productNameFont = FontFactory.GetFont(FontFactory.HELVETICA, 3, BaseColor.BLACK);
+                        var productNameWidth = 35f; // Ширина области
+                        var productNameHeight = 20f; // Высота для переноса строки
+                        var productNameRect = new Rectangle(
+                            ProductNamePosition.X,
+                            ProductNamePosition.Y,
+                            ProductNamePosition.X + productNameWidth,
+                            ProductNamePosition.Y + productNameHeight
+                        );
+
+                        var ct = new ColumnText(canvas);
+                        ct.SetSimpleColumn(
+                            new Phrase(ProductName, productNameFont),
+                            productNameRect.Left,
+                            productNameRect.Bottom,
+                            productNameRect.Right,
+                            productNameRect.Top,
+                            4f,
+                            Element.ALIGN_LEFT
+                        );
+
+                        ct.Go();
+
+                        // Добавляем остальные элементы
+                        ColumnText.ShowTextAligned(
+                            canvas,
+                            Element.ALIGN_LEFT,
+                            new Phrase(ProductNumber, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 5, BaseColor.BLACK)),
+                            ProductNumberPosition.X,
+                            ProductNumberPosition.Y,
+                            0
+                        );
+
+                        ColumnText.ShowTextAligned(
+                            canvas,
+                            Element.ALIGN_LEFT,
+                            new Phrase(Unit, FontFactory.GetFont(FontFactory.HELVETICA, 3, BaseColor.BLACK)),
+                            UnitPosition.X,
+                            UnitPosition.Y,
+                            0
+                        );
+
+                        // Генерация и добавление штрих-кода
+                        var barcodeWriter = new BarcodeWriter
+                        {
+                            Format = BarcodeFormat.EAN_13,
+                            Options = new EncodingOptions
+                            {
+                                Width = 200,
+                                Height = 30,
+                                NoPadding = true,
+                                PureBarcode = true
+                            }
+                        };
+
+                        var barcodeImage = barcodeWriter.Write(barcodeStr);
+                        var barcode = Image.GetInstance(barcodeImage, System.Drawing.Imaging.ImageFormat.Bmp);
+
+                        barcode.ScaleAbsolute(30f, 5f);
+                        barcode.SetAbsolutePosition(BarcodePosition.X, BarcodePosition.Y);
+                        canvas.AddImage(barcode);
+
+                        ColumnText.ShowTextAligned(
+                            canvas,
+                            Element.ALIGN_LEFT,
+                            new Phrase(BarcodeText, FontFactory.GetFont(FontFactory.HELVETICA, 3, BaseColor.BLACK)),
+                            BarcodeTextPosition.X,
+                            BarcodeTextPosition.Y,
+                            0
+                        );
+
+                        document.Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при генерации PDF: {ex.Message}");
+            }
+        }
+
         /// <summary>
         /// Prints the specified PDF file.
         /// </summary>
         /// <param name="filePath">Path to the PDF file to be printed.</param>
-        public static void PrintPdf(string filePath)
+        public static void PrintPdf(string filePath, string printerName, int paperSizeIndex)
         {
-            // Information about the process to start printing
-            ProcessStartInfo psi = new()
+            var doc = Patagames.Pdf.Net.PdfDocument.Load(filePath);
+            var printDoc = new Patagames.Pdf.Net.Controls.Wpf.PdfPrintDocument(doc);
+
+            var printerSettings = new PrinterSettings()
             {
-                FileName = filePath,
-                Verb = "print",
-                CreateNoWindow = true,
-                UseShellExecute = true,
+                PrinterName = printerName
             };
+
+            if (!printerSettings.IsValid)
+            {
+                throw new ArgumentException($"The printer named '{printerName}' was not found.");
+            }
+
+            var pageSettings = new PageSettings(printerSettings);
+
+            if (paperSizeIndex >= 0 && paperSizeIndex < printerSettings.PaperSizes.Count)
+            {
+                pageSettings.PaperSize = printerSettings.PaperSizes[paperSizeIndex];
+            }
+            else
+            {
+                throw new ArgumentException($"The index {paperSizeIndex} is outside the available paper sizes.");
+            }
+
+            printDoc.DefaultPageSettings = pageSettings;
+            printDoc.PrintController = new StandardPrintController();
+            printDoc.AutoCenter = true;
+            printDoc.AutoRotate = false;
 
             try
             {
-                // Start the printing process
-                var process = Process.Start(psi)!;
-                process.WaitForExit(); // Wait for the process to complete
+                printDoc.Print();
             }
             catch (Exception ex)
             {
-                // Handle exceptions during the printing process
-                Console.WriteLine($"Error while printing PDF: {ex.Message}");
+                Console.WriteLine($"Error when printing PDF: {ex.Message}");
             }
         }
     }

@@ -1,4 +1,6 @@
-﻿namespace WarehouseLabelPrintingSystem.Model
+﻿using System.Text.RegularExpressions;
+
+namespace WarehouseLabelPrintingSystem.Model
 {
     public class Product
     {
@@ -50,5 +52,24 @@
         public List<PriceList>? pricelist { get; set; }
         public List<object>? ingredients { get; set; }
         public List<object>? images { get; set; }
+
+        public string location
+        {
+            get
+            {
+                var pattern = @"^\d+-\d+-[A-Za-z]-\d+$";
+                var customField = custom_fields!.FirstOrDefault(cf => cf.value != null && Regex.IsMatch(cf.value, pattern));
+                string? foundValue = customField?.value;
+
+                if(foundValue != null)
+                {
+                    return foundValue;
+                }    
+                else
+                {
+                    return "No location";
+                }
+            }
+        }
     }
 }
