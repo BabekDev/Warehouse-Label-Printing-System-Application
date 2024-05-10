@@ -266,7 +266,16 @@ namespace WarehouseLabelPrintingSystem.ViewModel
             var doc = Patagames.Pdf.Net.PdfDocument.Load(filePath);
             var printDoc = new Patagames.Pdf.Net.Controls.Wpf.PdfPrintDocument(doc);
 
-            var printerSettings = new PrinterSettings();
+            var printerSettings = new PrinterSettings()
+            {
+                PrinterName = printerName
+            };
+
+            if (!printerSettings.IsValid)
+            {
+                throw new ArgumentException($"The printer named '{printerName}' was not found.");
+            }
+
             var pageSettings = new PageSettings(printerSettings);
 
             if (paperSizeIndex >= 0 && paperSizeIndex < printerSettings.PaperSizes.Count)

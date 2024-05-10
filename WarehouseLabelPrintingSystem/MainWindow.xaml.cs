@@ -60,6 +60,8 @@ namespace WarehouseLabelPrintingSystem
             FilteredProducts = CollectionViewSource.GetDefaultView(_products);
             FilteredProducts.Filter = ProductFilter;
             ListView_Products.ItemsSource = FilteredProducts;
+
+            LoadPrintersWithDefaultFirst();
         }
 
         private bool ProductFilter(object item)
@@ -104,6 +106,8 @@ namespace WarehouseLabelPrintingSystem
                     search_box_name.Visibility = Visibility.Visible;
                     search_box_name_title.Visibility = Visibility.Visible;
                     comboBox_labels.Visibility = Visibility.Visible;
+                    comboBox_print_list.Visibility = Visibility.Visible;
+                    search_box_printer_name_title.Visibility = Visibility.Visible;
 
                     _logger.LogInformation("Successfully connected to the API.");
                     isConnection_text.Text = "Successfully connected to the API";
@@ -163,7 +167,7 @@ namespace WarehouseLabelPrintingSystem
                         Directory.CreateDirectory(pdfFolderPath);
                     }
 
-                    string timestamp = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
+                    string timestamp = $"{selectedProduct.product_number} - {comboBox_labels.Text}";
                     string fileName = $"{timestamp}.pdf";
 
                     string filePath = Path.Combine(pdfFolderPath, fileName);
@@ -173,7 +177,7 @@ namespace WarehouseLabelPrintingSystem
                         BarcodeGenerationAndSavingToPDF(filePath, foundValue, selectedProduct);
                         _logger.LogInformation($"PDF file saved at: {filePath}");
 
-                        LabelViewModel.PrintPdf(filePath, "Honeywell PC42d (203 dpi)", comboBox_labels.SelectedIndex);
+                        LabelViewModel.PrintPdf(filePath, comboBox_print_list.Text, comboBox_labels.SelectedIndex);
                     }
                     catch (Exception ex)
                     {
@@ -325,6 +329,29 @@ namespace WarehouseLabelPrintingSystem
                         label.GenerateLabelSize39x27(filePath, product.barcode!);
                         break;
                 }
+            }
+        }
+
+        private void LoadPrintersWithDefaultFirst()
+        {
+            var defaultPrinter = new PrinterSettings().PrinterName;
+
+            var installedPrinters = PrinterSettings.InstalledPrinters.Cast<string>().ToList();
+
+            if (installedPrinters.Contains(defaultPrinter))
+            {
+                comboBox_print_list.Items.Add(defaultPrinter);
+                installedPrinters.Remove(defaultPrinter);
+            }
+
+            foreach (var printerName in installedPrinters)
+            {
+                comboBox_print_list.Items.Add(printerName);
+            }
+
+            if (comboBox_print_list.Items.Count > 0)
+            {
+                comboBox_print_list.SelectedIndex = 0;
             }
         }
     }
