@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:WarehouseLabelPrintingSystem"
         xmlns:Model="clr-namespace:WarehouseLabelPrintingSystem.Model" x:Class="WarehouseLabelPrintingSystem.MainWindow"
         mc:Ignorable="d"
-        Title="Warehouse Label Printing System" Height="450" Width="879" Background="#FF424242">
+        Title="Warehouse Label Printing System" Height="450" Width="808" Background="#FF424242">
     <Window.Resources>
         <Style x:Key="CustomButtonStyle" TargetType="{x:Type Button}">
             <Style.Triggers>
@@ -41,15 +41,15 @@
         </Style>
     </Window.Resources>
     <Grid Cursor="Arrow" x:Name="main_grid">
-        <TextBlock x:Name="isConnection_text" TextWrapping="Wrap" TextAlignment="Right" VerticalAlignment="Top" Foreground="#FF70FF72" HorizontalAlignment="Right" Width="220" Margin="0,22,6,0"/>
+        <TextBlock x:Name="isConnection_text" TextWrapping="Wrap" TextAlignment="Right" Foreground="#FF70FF72" HorizontalAlignment="Right" Width="220" Margin="0,0,6,10" Height="16" VerticalAlignment="Bottom" FontSize="14"/>
         <Button x:Name="Export_to_PDF" Style="{StaticResource CustomButtonStyle}" Content="Print Label" Visibility="Collapsed" HorizontalAlignment="Left" Margin="8,5,0,0" VerticalAlignment="Top" Width="120" Height="24" FontFamily="Arial" ForceCursor="True" FontSize="14" Cursor="Hand" RenderTransformOrigin="1,0" BorderBrush="DimGray" Click="Export_to_PDF_Click"  IsEnabled="False"/>
-        <ListView x:Name="ListView_Products" SelectionMode="Single" Margin="-1,60,-1,-1" SelectionChanged="ListView_Products_SelectionChanged" Background="White" BorderBrush="#FF080808" FontSize="14" ItemsSource="{Binding FilteredProducts}" PreviewMouseLeftButtonUp="ListView_Products_PreviewMouseLeftButtonUp">
+        <ListView x:Name="ListView_Products" SelectionMode="Single" Margin="-1,60,-1,34" SelectionChanged="ListView_Products_SelectionChanged" Background="White" BorderBrush="#FF080808" FontSize="14" ItemsSource="{Binding FilteredProducts}" PreviewMouseLeftButtonUp="ListView_Products_PreviewMouseLeftButtonUp">
             <ListView.View>
                 <GridView x:Name="GridView_Products" />
             </ListView.View>
         </ListView>
-        <ProgressBar x:Name="progress_connectionAPI" IsIndeterminate="True" Height="28" Margin="0,16,4,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="222" Background="#FF424242" BorderBrush="White"/>
-        <TextBlock x:Name="text_connectionAPI" Margin="0,22,5,0" TextWrapping="Wrap" Text="API connection and data loading..." VerticalAlignment="Top" HorizontalAlignment="Right" Width="221" Foreground="#FFD4D4D4" TextAlignment="Center" FontStyle="Italic"/>
+        <ProgressBar x:Name="progress_connectionAPI" IsIndeterminate="True" Margin="0,0,4,4" HorizontalAlignment="Right" Width="222" Background="#FF424242" BorderBrush="White" Height="28" VerticalAlignment="Bottom"/>
+        <TextBlock x:Name="text_connectionAPI" Margin="0,0,5,10" TextWrapping="Wrap" Text="API connection and data loading..." HorizontalAlignment="Right" Width="221" Foreground="#FFD4D4D4" TextAlignment="Center" FontStyle="Italic" Height="16" VerticalAlignment="Bottom"/>
         <TextBox x:Name="search_box_number" Visibility="Collapsed" AcceptsReturn="False" Margin="497,26,0,0" TextWrapping="NoWrap" Text="" VerticalContentAlignment="Center" VerticalAlignment="Top" Height="28" BorderBrush="#FF6C6C6C" Background="#FF505050" Foreground="White" FontSize="13" TextChanged="search_box_number_TextChanged" HorizontalAlignment="Left" Width="132"/>
         <TextBlock x:Name="search_box_number_title" Visibility="Collapsed" HorizontalAlignment="Left" Margin="498,5,0,0" TextWrapping="Wrap" Text="Search by number..." VerticalAlignment="Top" Width="130" Height="18" Foreground="#FFE4E4E4" FontSize="13" FontStyle="Italic"/>
         <TextBox x:Name="search_box_name" Visibility="Collapsed" AcceptsReturn="False" HorizontalAlignment="Left" Margin="314,26,0,0" TextWrapping="NoWrap" Text="" VerticalContentAlignment="Center" VerticalAlignment="Top" Width="170" Height="28" BorderBrush="#FF6C6C6C" Background="#FF505050" Foreground="White" FontSize="13" TextChanged="search_box_name_TextChanged"/>
@@ -60,5 +60,8 @@
         </ComboBox>
         <ComboBox x:Name="comboBox_print_list" Visibility="Collapsed" HorizontalAlignment="Left" Margin="143,31,0,0" VerticalAlignment="Top" Width="157" Height="23"/>
         <TextBlock x:Name="search_box_printer_name_title" Visibility="Collapsed" HorizontalAlignment="Left" Margin="143,8,0,0" TextWrapping="Wrap" Text="Select a printer..." VerticalAlignment="Top" Width="157" Height="18" Foreground="#FFE4E4E4" FontSize="13" FontStyle="Italic"/>
+        <TextBox x:Name="search_box_location" Visibility="Collapsed" AcceptsReturn="False" Margin="645,26,0,0" TextWrapping="NoWrap" Text="" VerticalContentAlignment="Center" VerticalAlignment="Top" Height="28" BorderBrush="#FF6C6C6C" Background="#FF505050" Foreground="White" FontSize="13" HorizontalAlignment="Left" Width="132" TextChanged="search_box_location_TextChanged"/>
+        <TextBlock x:Name="search_box_location_title" Visibility="Collapsed" HorizontalAlignment="Left" Margin="645,5,0,0" TextWrapping="Wrap" Text="Search by location..." VerticalAlignment="Top" Width="130" Height="18" Foreground="#FFE4E4E4" FontSize="13" FontStyle="Italic"/>
+        <TextBlock x:Name="version_textblock" HorizontalAlignment="Left" Margin="8,0,0,10" TextWrapping="Wrap" Text="Version 1.18" Width="120" Foreground="#FFE4E4E4" FontSize="14" Height="18" VerticalAlignment="Bottom"/>
     </Grid>
 </Window>

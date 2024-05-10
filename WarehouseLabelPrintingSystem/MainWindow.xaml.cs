@@ -70,12 +70,14 @@ namespace WarehouseLabelPrintingSystem
             {
                 string searchNumber = search_box_number.Text ?? "";
                 string searchName = search_box_name.Text ?? "";
+                string searchLocation = search_box_location.Text ?? "";
 
                 bool matchesNumber = product.product_number!.Contains(searchNumber, StringComparison.OrdinalIgnoreCase);
                 bool matchesName = product.product_name!.Contains(searchName, StringComparison.OrdinalIgnoreCase);
+                bool matchesLocation = product.location!.Contains(searchLocation, StringComparison.OrdinalIgnoreCase);
 
                 // The product matches if it satisfies both search conditions
-                return matchesNumber && matchesName;
+                return matchesNumber && matchesName && matchesLocation;
             }
 
             return false;
@@ -108,6 +110,8 @@ namespace WarehouseLabelPrintingSystem
                     comboBox_labels.Visibility = Visibility.Visible;
                     comboBox_print_list.Visibility = Visibility.Visible;
                     search_box_printer_name_title.Visibility = Visibility.Visible;
+                    search_box_location_title.Visibility= Visibility.Visible;
+                    search_box_location.Visibility = Visibility.Visible;
 
                     _logger.LogInformation("Successfully connected to the API.");
                     isConnection_text.Text = "Successfully connected to the API";
@@ -157,7 +161,7 @@ namespace WarehouseLabelPrintingSystem
                 var customField = selectedProduct.custom_fields!.FirstOrDefault(cf => cf.value != null && Regex.IsMatch(cf.value, pattern));
                 string? foundValue = customField?.value;
 
-                if (foundValue != null)
+                if (foundValue != null || comboBox_labels.SelectedIndex == 1)
                 {
                     string projectRoot = AppDomain.CurrentDomain.BaseDirectory;
                     string pdfFolderPath = Path.Combine(projectRoot, "PDF");
@@ -174,10 +178,10 @@ namespace WarehouseLabelPrintingSystem
 
                     try
                     {
-                        BarcodeGenerationAndSavingToPDF(filePath, foundValue, selectedProduct);
+                        BarcodeGenerationAndSavingToPDF(filePath, foundValue!, selectedProduct);
                         _logger.LogInformation($"PDF file saved at: {filePath}");
 
-                        LabelViewModel.PrintPdf(filePath, comboBox_print_list.Text, comboBox_labels.SelectedIndex);
+                        //LabelViewModel.PrintPdf(filePath, comboBox_print_list.Text, comboBox_labels.SelectedIndex);
                     }
                     catch (Exception ex)
                     {
@@ -239,6 +243,14 @@ namespace WarehouseLabelPrintingSystem
                     columns.Add(column);
                 }
             }
+
+            var locationColumn = new GridViewColumn
+            {
+                Header = "location",
+                DisplayMemberBinding = new Binding("location"),
+            };
+
+            columns.Add(locationColumn);
 
             return columns;
         }
@@ -353,6 +365,11 @@ namespace WarehouseLabelPrintingSystem
             {
                 comboBox_print_list.SelectedIndex = 0;
             }
+        }
+
+        private void search_box_location_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            FilteredProducts.Refresh();
         }
     }
 }
