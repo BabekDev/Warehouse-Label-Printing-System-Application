@@ -180,8 +180,6 @@ namespace WarehouseLabelPrintingSystem
                     {
                         BarcodeGenerationAndSavingToPDF(filePath, foundValue!, selectedProduct);
                         _logger.LogInformation($"PDF file saved at: {filePath}");
-
-                        //LabelViewModel.PrintPdf(filePath, comboBox_print_list.Text, comboBox_labels.SelectedIndex);
                     }
                     catch (Exception ex)
                     {
@@ -335,10 +333,12 @@ namespace WarehouseLabelPrintingSystem
                 {
                     case 0:
                         label.GenerateLabelSize208x148(filePath, product.barcode!);
+                        LabelViewModel.PrintPdf(filePath, comboBox_print_list.Text, 448, 288);
                         break;
 
                     case 1:
                         label.GenerateLabelSize39x27(filePath, product.barcode!);
+                        LabelViewModel.PrintPdf(filePath, comboBox_print_list.Text, 188, 128);
                         break;
                 }
             }

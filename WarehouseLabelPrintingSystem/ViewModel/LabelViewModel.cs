@@ -8,8 +8,6 @@ using ZXing.Windows.Compatibility;
 using Rectangle = iTextSharp.text.Rectangle;
 using Image = iTextSharp.text.Image;
 using System.Drawing.Printing;
-using System.Printing;
-using System.Windows;
 
 
 namespace WarehouseLabelPrintingSystem.ViewModel
@@ -257,49 +255,93 @@ namespace WarehouseLabelPrintingSystem.ViewModel
             }
         }
 
+        public static void PrintPdf(string filePath, string printerName, int width, int height)
+        {
+            try
+            {
+                // Create the printer settings for our printer
+                var printerSettings = new PrinterSettings
+                {
+                    PrinterName = printerName,
+                };
+
+                // Create our page settings for the paper size selected
+                var pageSettings = new PageSettings(printerSettings)
+                {
+                    Margins = new Margins(0, 0, 0, 0),
+                    PaperSize = new PaperSize(printerName, width, height),
+                };
+
+                foreach (PaperSize paperSize in printerSettings.PaperSizes)
+                {
+                    if (paperSize.PaperName == printerName)
+                    {
+                        pageSettings.PaperSize = paperSize;
+                        break;
+                    }
+                }
+
+                // Now print the PDF document
+                using (var document = PdfiumViewer.PdfDocument.Load(filePath))
+                {
+                    using (var printDocument = document.CreatePrintDocument())
+                    {
+                        printDocument.PrinterSettings = printerSettings;
+                        printDocument.DefaultPageSettings = pageSettings;
+                        printDocument.PrintController = new StandardPrintController();
+                        printDocument.Print();
+                    }
+                }
+            }
+            catch
+            {
+                Console.WriteLine(1);
+            }
+        }
+
         /// <summary>
         /// Prints the specified PDF file.
         /// </summary>
         /// <param name="filePath">Path to the PDF file to be printed.</param>
-        public static void PrintPdf(string filePath, string printerName, int paperSizeIndex)
-        {
-            var doc = Patagames.Pdf.Net.PdfDocument.Load(filePath);
-            var printDoc = new Patagames.Pdf.Net.Controls.Wpf.PdfPrintDocument(doc);
+        //public static void PrintPdf(string filePath, string printerName, int paperSizeIndex)
+        //{
+        //    var doc = Patagames.Pdf.Net.PdfDocument.Load(filePath);
+        //    var printDoc = new Patagames.Pdf.Net.Controls.Wpf.PdfPrintDocument(doc);
 
-            var printerSettings = new PrinterSettings()
-            {
-                PrinterName = printerName
-            };
+        //    var printerSettings = new PrinterSettings()
+        //    {
+        //        PrinterName = printerName
+        //    };
 
-            if (!printerSettings.IsValid)
-            {
-                throw new ArgumentException($"The printer named '{printerName}' was not found.");
-            }
+        //    if (!printerSettings.IsValid)
+        //    {
+        //        throw new ArgumentException($"The printer named '{printerName}' was not found.");
+        //    }
 
-            var pageSettings = new PageSettings(printerSettings);
+        //    var pageSettings = new PageSettings(printerSettings);
 
-            if (paperSizeIndex >= 0 && paperSizeIndex < printerSettings.PaperSizes.Count)
-            {
-                pageSettings.PaperSize = printerSettings.PaperSizes[paperSizeIndex];
-            }
-            else
-            {
-                throw new ArgumentException($"The index {paperSizeIndex} is outside the available paper sizes.");
-            }
+        //    if (paperSizeIndex >= 0 && paperSizeIndex < printerSettings.PaperSizes.Count)
+        //    {
+        //        pageSettings.PaperSize = printerSettings.PaperSizes[paperSizeIndex];
+        //    }
+        //    else
+        //    {
+        //        throw new ArgumentException($"The index {paperSizeIndex} is outside the available paper sizes.");
+        //    }
 
-            printDoc.DefaultPageSettings = pageSettings;
-            printDoc.PrintController = new StandardPrintController();
-            printDoc.AutoCenter = true;
-            printDoc.AutoRotate = false;
+        //    printDoc.DefaultPageSettings = pageSettings;
+        //    printDoc.PrintController = new StandardPrintController();
+        //    printDoc.AutoCenter = true;
+        //    printDoc.AutoRotate = false;
 
-            try
-            {
-                printDoc.Print();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error when printing PDF: {ex.Message}");
-            }
-        }
+        //    try
+        //    {
+        //        printDoc.Print();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"Error when printing PDF: {ex.Message}");
+        //    }
+        //}
     }
 }

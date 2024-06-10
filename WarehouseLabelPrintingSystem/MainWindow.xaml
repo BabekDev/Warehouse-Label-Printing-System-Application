@@ -62,6 +62,6 @@
         <TextBlock x:Name="search_box_printer_name_title" Visibility="Collapsed" HorizontalAlignment="Left" Margin="143,8,0,0" TextWrapping="Wrap" Text="Select a printer..." VerticalAlignment="Top" Width="157" Height="18" Foreground="#FFE4E4E4" FontSize="13" FontStyle="Italic"/>
         <TextBox x:Name="search_box_location" Visibility="Collapsed" AcceptsReturn="False" Margin="645,26,0,0" TextWrapping="NoWrap" Text="" VerticalContentAlignment="Center" VerticalAlignment="Top" Height="28" BorderBrush="#FF6C6C6C" Background="#FF505050" Foreground="White" FontSize="13" HorizontalAlignment="Left" Width="132" TextChanged="search_box_location_TextChanged"/>
         <TextBlock x:Name="search_box_location_title" Visibility="Collapsed" HorizontalAlignment="Left" Margin="645,5,0,0" TextWrapping="Wrap" Text="Search by location..." VerticalAlignment="Top" Width="130" Height="18" Foreground="#FFE4E4E4" FontSize="13" FontStyle="Italic"/>
-        <TextBlock x:Name="version_textblock" HorizontalAlignment="Left" Margin="8,0,0,10" TextWrapping="Wrap" Text="Version 1.20" Width="120" Foreground="#FFE4E4E4" FontSize="14" Height="18" VerticalAlignment="Bottom"/>
+        <TextBlock x:Name="version_textblock" HorizontalAlignment="Left" Margin="8,0,0,10" TextWrapping="Wrap" Text="Version 1.26" Width="120" Foreground="#FFE4E4E4" FontSize="14" Height="18" VerticalAlignment="Bottom"/>
     </Grid>
 </Window>
