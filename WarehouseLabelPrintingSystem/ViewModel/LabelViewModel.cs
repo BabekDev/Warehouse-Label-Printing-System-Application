@@ -123,34 +123,38 @@ namespace WarehouseLabelPrintingSystem.ViewModel
                     0
                 );
 
-                // Generate the barcode using ZXing and add it to the PDF
-                var barcodeWriter = new BarcodeWriter
+                if (!string.IsNullOrEmpty(barcodeStr))
                 {
-                    Format = BarcodeFormat.EAN_13,
-                    Options = new EncodingOptions
+
+                    // Generate the barcode using ZXing and add it to the PDF
+                    var barcodeWriter = new BarcodeWriter
                     {
-                        Width = 200,
-                        Height = 30,
-                        NoPadding = true,
-                        PureBarcode = true
-                    }
-                };
+                        Format = BarcodeFormat.EAN_13,
+                        Options = new EncodingOptions
+                        {
+                            Width = 200,
+                            Height = 30,
+                            NoPadding = true,
+                            PureBarcode = true,
+                        }
+                    };
 
-                var barcodeImage = barcodeWriter.Write(barcodeStr);
-                var barcode = Image.GetInstance(barcodeImage, System.Drawing.Imaging.ImageFormat.Bmp);
-                barcode.SetAbsolutePosition(BarcodePosition.X, BarcodePosition.Y);
+                    var barcodeImage = barcodeWriter.Write(barcodeStr);
+                    var barcode = Image.GetInstance(barcodeImage, System.Drawing.Imaging.ImageFormat.Bmp);
+                    barcode.SetAbsolutePosition(BarcodePosition.X, BarcodePosition.Y);
 
-                canvas.AddImage(barcode);
+                    canvas.AddImage(barcode);
 
-                // Add the barcode text with specific position
-                ColumnText.ShowTextAligned(
-                    canvas,
-                    Element.ALIGN_LEFT,
-                    new Phrase(BarcodeText, FontFactory.GetFont(FontFactory.HELVETICA, 12, BaseColor.BLACK)),
-                    BarcodeTextPosition.X,
-                    BarcodeTextPosition.Y,
-                    0
-                );
+                    // Add the barcode text with specific position
+                    ColumnText.ShowTextAligned(
+                        canvas,
+                        Element.ALIGN_LEFT,
+                        new Phrase(BarcodeText, FontFactory.GetFont(FontFactory.HELVETICA, 12, BaseColor.BLACK)),
+                        BarcodeTextPosition.X,
+                        BarcodeTextPosition.Y,
+                        0
+                    );
+                }
 
                 document.Close(); // Close the document to save changes
             }
@@ -175,8 +179,8 @@ namespace WarehouseLabelPrintingSystem.ViewModel
                         var canvas = writer.DirectContent;
 
                         var productNameFont = FontFactory.GetFont(FontFactory.HELVETICA, 3, BaseColor.BLACK);
-                        var productNameWidth = 35f; // Ширина области
-                        var productNameHeight = 20f; // Высота для переноса строки
+                        var productNameWidth = 35f;
+                        var productNameHeight = 20f;
                         var productNameRect = new Rectangle(
                             ProductNamePosition.X,
                             ProductNamePosition.Y,
@@ -197,7 +201,6 @@ namespace WarehouseLabelPrintingSystem.ViewModel
 
                         ct.Go();
 
-                        // Добавляем остальные элементы
                         ColumnText.ShowTextAligned(
                             canvas,
                             Element.ALIGN_LEFT,
@@ -216,34 +219,36 @@ namespace WarehouseLabelPrintingSystem.ViewModel
                             0
                         );
 
-                        // Генерация и добавление штрих-кода
-                        var barcodeWriter = new BarcodeWriter
+                        if (!string.IsNullOrEmpty(barcodeStr))
                         {
-                            Format = BarcodeFormat.EAN_13,
-                            Options = new EncodingOptions
+                            var barcodeWriter = new BarcodeWriter
                             {
-                                Width = 200,
-                                Height = 30,
-                                NoPadding = true,
-                                PureBarcode = true
-                            }
-                        };
+                                Format = BarcodeFormat.EAN_13,
+                                Options = new EncodingOptions
+                                {
+                                    Width = 200,
+                                    Height = 30,
+                                    NoPadding = true,
+                                    PureBarcode = true
+                                }
+                            };
 
-                        var barcodeImage = barcodeWriter.Write(barcodeStr);
-                        var barcode = Image.GetInstance(barcodeImage, System.Drawing.Imaging.ImageFormat.Bmp);
+                            var barcodeImage = barcodeWriter.Write(barcodeStr);
+                            var barcode = Image.GetInstance(barcodeImage, System.Drawing.Imaging.ImageFormat.Bmp);
 
-                        barcode.ScaleAbsolute(30f, 5f);
-                        barcode.SetAbsolutePosition(BarcodePosition.X, BarcodePosition.Y);
-                        canvas.AddImage(barcode);
+                            barcode.ScaleAbsolute(30f, 5f);
+                            barcode.SetAbsolutePosition(BarcodePosition.X, BarcodePosition.Y);
+                            canvas.AddImage(barcode);
 
-                        ColumnText.ShowTextAligned(
-                            canvas,
-                            Element.ALIGN_LEFT,
-                            new Phrase(BarcodeText, FontFactory.GetFont(FontFactory.HELVETICA, 3, BaseColor.BLACK)),
-                            BarcodeTextPosition.X,
-                            BarcodeTextPosition.Y,
-                            0
-                        );
+                            ColumnText.ShowTextAligned(
+                                canvas,
+                                Element.ALIGN_LEFT,
+                                new Phrase(BarcodeText, FontFactory.GetFont(FontFactory.HELVETICA, 3, BaseColor.BLACK)),
+                                BarcodeTextPosition.X,
+                                BarcodeTextPosition.Y,
+                                0
+                            );
+                        }
 
                         document.Close();
                     }
@@ -251,7 +256,7 @@ namespace WarehouseLabelPrintingSystem.ViewModel
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ошибка при генерации PDF: {ex.Message}");
+                Console.WriteLine($"Error generating PDF: {ex.Message}");
             }
         }
 
@@ -295,53 +300,8 @@ namespace WarehouseLabelPrintingSystem.ViewModel
             }
             catch
             {
-                Console.WriteLine(1);
+                Console.WriteLine("An error occurred while printing the document.");
             }
         }
-
-        /// <summary>
-        /// Prints the specified PDF file.
-        /// </summary>
-        /// <param name="filePath">Path to the PDF file to be printed.</param>
-        //public static void PrintPdf(string filePath, string printerName, int paperSizeIndex)
-        //{
-        //    var doc = Patagames.Pdf.Net.PdfDocument.Load(filePath);
-        //    var printDoc = new Patagames.Pdf.Net.Controls.Wpf.PdfPrintDocument(doc);
-
-        //    var printerSettings = new PrinterSettings()
-        //    {
-        //        PrinterName = printerName
-        //    };
-
-        //    if (!printerSettings.IsValid)
-        //    {
-        //        throw new ArgumentException($"The printer named '{printerName}' was not found.");
-        //    }
-
-        //    var pageSettings = new PageSettings(printerSettings);
-
-        //    if (paperSizeIndex >= 0 && paperSizeIndex < printerSettings.PaperSizes.Count)
-        //    {
-        //        pageSettings.PaperSize = printerSettings.PaperSizes[paperSizeIndex];
-        //    }
-        //    else
-        //    {
-        //        throw new ArgumentException($"The index {paperSizeIndex} is outside the available paper sizes.");
-        //    }
-
-        //    printDoc.DefaultPageSettings = pageSettings;
-        //    printDoc.PrintController = new StandardPrintController();
-        //    printDoc.AutoCenter = true;
-        //    printDoc.AutoRotate = false;
-
-        //    try
-        //    {
-        //        printDoc.Print();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Error when printing PDF: {ex.Message}");
-        //    }
-        //}
     }
 }

@@ -112,6 +112,7 @@ namespace WarehouseLabelPrintingSystem
                     search_box_printer_name_title.Visibility = Visibility.Visible;
                     search_box_location_title.Visibility= Visibility.Visible;
                     search_box_location.Visibility = Visibility.Visible;
+                    refresh_product_list.Visibility = Visibility.Visible;
 
                     _logger.LogInformation("Successfully connected to the API.");
                     isConnection_text.Text = "Successfully connected to the API";
@@ -160,35 +161,46 @@ namespace WarehouseLabelPrintingSystem
                 var pattern = @"^\d+-\d+-[A-Za-z]-\d+$";
                 var customField = selectedProduct.custom_fields!.FirstOrDefault(cf => cf.value != null && Regex.IsMatch(cf.value, pattern));
                 string? foundValue = customField?.value;
+                string foundBarcode = selectedProduct.barcode!;
+                bool isValid = CorrectEAN13Checksum(ref foundBarcode);
 
                 if (foundValue != null || comboBox_labels.SelectedIndex == 1)
                 {
-                    string projectRoot = AppDomain.CurrentDomain.BaseDirectory;
-                    string pdfFolderPath = Path.Combine(projectRoot, "PDF");
-
-                    if (!Directory.Exists(pdfFolderPath))
+                    if (isValid)
                     {
-                        Directory.CreateDirectory(pdfFolderPath);
+                        string projectRoot = AppDomain.CurrentDomain.BaseDirectory;
+                        string pdfFolderPath = Path.Combine(projectRoot, "PDF");
+
+                        if (!Directory.Exists(pdfFolderPath))
+                        {
+                            Directory.CreateDirectory(pdfFolderPath);
+                        }
+
+                        string timestamp = $"{selectedProduct.product_number} - {comboBox_labels.Text}";
+                        string fileName = $"{timestamp}.pdf";
+
+                        string filePath = Path.Combine(pdfFolderPath, fileName);
+
+                        try
+                        {
+                            BarcodeGenerationAndSavingToPDF(filePath, foundValue!, selectedProduct);
+                            _logger.LogInformation($"PDF file saved at: {filePath}");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError($"Error saving PDF: {ex.Message}");
+                            MessageBox.Show("Error saving PDF: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
                     }
-
-                    string timestamp = $"{selectedProduct.product_number} - {comboBox_labels.Text}";
-                    string fileName = $"{timestamp}.pdf";
-
-                    string filePath = Path.Combine(pdfFolderPath, fileName);
-
-                    try
+                    else
                     {
-                        BarcodeGenerationAndSavingToPDF(filePath, foundValue!, selectedProduct);
-                        _logger.LogInformation($"PDF file saved at: {filePath}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"Error saving PDF: {ex.Message}");
-                        MessageBox.Show("Error saving PDF: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        _logger.LogError($"The barcode {foundBarcode} is incorrect, please check if the barcode is correct.");
+                        MessageBox.Show($"The barcode {foundBarcode} is incorrect, please check if the barcode is correct.");
                     }
                 }
                 else
                 {
+                    _logger.LogError("The location of this product was not found.");
                     MessageBox.Show("The location of this product was not found.");
                 }
             }
@@ -332,12 +344,16 @@ namespace WarehouseLabelPrintingSystem
                 switch (comboBox_labels.SelectedIndex)
                 {
                     case 0:
+                        _logger.LogInformation("Label generation has started.");
                         label.GenerateLabelSize208x148(filePath, product.barcode!);
+                        _logger.LogInformation("After generation, the document was sent to the oven.");
                         LabelViewModel.PrintPdf(filePath, comboBox_print_list.Text, 448, 288);
                         break;
 
                     case 1:
+                        _logger.LogInformation("Label generation has started.");
                         label.GenerateLabelSize39x27(filePath, product.barcode!);
+                        _logger.LogInformation("After generation, the document was sent to the oven.");
                         LabelViewModel.PrintPdf(filePath, comboBox_print_list.Text, 188, 128);
                         break;
                 }
@@ -370,6 +386,46 @@ namespace WarehouseLabelPrintingSystem
         private void search_box_location_TextChanged(object sender, TextChangedEventArgs e)
         {
             FilteredProducts.Refresh();
+        }
+
+        public static bool CorrectEAN13Checksum(ref string barcode)
+        {
+            if (barcode != null && barcode.Length == 13)
+            {
+                int sum = 0;
+                for (int i = 0; i < 12; i++)
+                {
+                    int digit = int.Parse(barcode[i].ToString());
+                    sum += (i % 2 == 0) ? digit : digit * 3;
+                }
+
+                int expectedChecksum = (10 - (sum % 10)) % 10;
+                int actualChecksum = int.Parse(barcode[12].ToString());
+
+                if (expectedChecksum == actualChecksum)
+                {
+                    return true;
+                }
+                else
+                {
+                    barcode = barcode.Substring(0, 12) + expectedChecksum;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void refresh_product_list_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ConnectToApi();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }
