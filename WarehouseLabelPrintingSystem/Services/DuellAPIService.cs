@@ -121,5 +121,69 @@ namespace WarehouseLabelPrintingSystem.Services
                 return null;
             }
         }
+
+        /// <summary>
+        /// Fetches all products from the API, handling pagination.
+        /// </summary>
+        /// <returns>A list of products, or null if the request fails.</returns>
+        public async Task<string?> FetchAllProducts()
+        {
+            try
+            {
+                string accessToken = await GetAccessToken();
+
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    _logger.LogError("Failed to retrieve access token.");
+                    return null;
+                }
+
+                var allProducts = new List<Dictionary<string, object>>();
+                var start = 0;
+                var length = 100;
+
+                while (true)
+                {
+                    var url = $"{_urlProductList}?start={start}&length={length}";
+                    var request = new HttpRequestMessage(HttpMethod.Get, url);
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                    var response = await _httpClient.SendAsync(request);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        _logger.LogError($"Failed to retrieve product list. Status: {response.StatusCode}");
+                        break;
+                    }
+
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var decodedResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseContent);
+
+                    if (decodedResponse == null || !decodedResponse.ContainsKey("products"))
+                    {
+                        _logger.LogInformation("No more products found, stopping.");
+                        break;
+                    }
+
+                    var products = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(decodedResponse["products"].ToString());
+                    allProducts.AddRange(products);
+                    start += length;
+                    _logger.LogInformation($"Fetched {products.Count} products, total: {allProducts.Count}");
+
+                    if (products.Count < length)
+                    {
+                        break;
+                    }
+                }
+
+                return JsonConvert.SerializeObject(new { products = allProducts });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(message: "An error occurred while fetching all products.", ex);
+                return null;
+            }
+        }
     }
 }

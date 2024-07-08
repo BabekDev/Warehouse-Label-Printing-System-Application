@@ -93,10 +93,11 @@ namespace WarehouseLabelPrintingSystem
                 _logger.LogInformation("Attempting to connect to the API...");
                 string? token = await _apiService.GetAccessToken();
                 string? jsonResponse = await _apiService.GetProductList(token);
+                var products = await _apiService.FetchAllProducts();
 
-                Root? root = JsonConvert.DeserializeObject<Root>(jsonResponse!);
+                Root? root = JsonConvert.DeserializeObject<Root>(products!);
 
-                if (root != null && root.status)
+                if (root != null)
                 {
                     progress_connectionAPI.IsIndeterminate = false;
                     isConnection_text.Visibility = Visibility.Visible;
