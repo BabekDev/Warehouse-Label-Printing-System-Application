@@ -44,6 +44,13 @@ namespace WarehouseLabelPrintingSystem
 
             ConnectToApi();
 
+            FilterData();
+
+            LoadPrintersWithDefaultFirst();
+        }
+
+        private void FilterData()
+        {
             _currentSortColumn = string.Empty;
             _currentSortDirection = ListSortDirection.Ascending;
 
@@ -60,8 +67,6 @@ namespace WarehouseLabelPrintingSystem
             FilteredProducts = CollectionViewSource.GetDefaultView(_products);
             FilteredProducts.Filter = ProductFilter;
             ListView_Products.ItemsSource = FilteredProducts;
-
-            LoadPrintersWithDefaultFirst();
         }
 
         private bool ProductFilter(object item)
@@ -101,6 +106,7 @@ namespace WarehouseLabelPrintingSystem
                 {
                     progress_connectionAPI.IsIndeterminate = false;
                     isConnection_text.Visibility = Visibility.Visible;
+                    isUpdate_text.Visibility = Visibility.Visible;
                     Export_to_PDF.Visibility = Visibility.Visible;
                     progress_connectionAPI.Visibility = Visibility.Collapsed;
                     text_connectionAPI.Visibility = Visibility.Collapsed;
@@ -117,6 +123,9 @@ namespace WarehouseLabelPrintingSystem
 
                     _logger.LogInformation("Successfully connected to the API.");
                     isConnection_text.Text = "Successfully connected to the API";
+
+                    var dataTime = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
+                    isUpdate_text.Text = $"Data update date: {dataTime}";
 
                     var productColumns = CreateProductColumns();
                     GridView_Products.Columns.Clear();
@@ -421,7 +430,16 @@ namespace WarehouseLabelPrintingSystem
         {
             try
             {
+                progress_connectionAPI.Visibility = Visibility.Visible;
+                progress_connectionAPI.IsIndeterminate = true;
+                refresh_product_list.Visibility = Visibility.Hidden;
+                isConnection_text.Visibility = Visibility.Hidden;
+                isUpdate_text.Visibility = Visibility.Hidden;
+                text_connectionAPI.Visibility = Visibility.Visible;
+                text_connectionAPI.Text = "Updating List Data...";
+                ListView_Products.ItemsSource = null;
                 ConnectToApi();
+                FilterData();
             }
             catch (Exception ex)
             {
